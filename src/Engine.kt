@@ -16,7 +16,7 @@ class ChessEngine {
         while (true) {
             // Setup queue
         val queue = LinkedList<NegamaxNode>()
-            queue.add(NegamaxNode(null, chessBoard))
+            queue.add(NegamaxNode(null, chessBoard, 0.0, currentPlayer))
 
             // Get the next board state
             chessBoard = negamax(queue, currentPlayer)
@@ -32,6 +32,8 @@ class ChessEngine {
 
     private data class NegamaxNode(val parentNode: NegamaxNode?,
                                    val board: ChessBoard,
+                                   val boardValue: Double,
+                                   val forColor: ChessPieceColor,
                                    val childNodes: List<NegamaxNode> = ArrayList<NegamaxNode>())
 
     private fun negamax(queue: Queue<NegamaxNode>, forColor: ChessPieceColor, depth: Int = 0) : ChessBoard {
@@ -41,7 +43,7 @@ class ChessEngine {
             while (queue.peek() != null) {
                 val node = queue.poll()
                 for (board in node.board.makeAllValidMoves(forColor)) {
-                    val newNode = NegamaxNode(node, board)
+                    val newNode = NegamaxNode(node, board, board.evaluate(forColor), forColor)
                     nextLayerQueue.add(newNode)
                 }
             }
@@ -57,13 +59,41 @@ class ChessEngine {
             // Process the next layer
             negamax(nextLayerQueue, nextPlayer, newDepth)
         } else {
+            if (queue.peek() == null) {
+                throw NoMoveFoundException()
+            }
+
+            // Get the root node of the tree
+            var rootNode = queue.poll().parentNode
+            while (rootNode.parentNode != null) {
+                rootNode = rootNode.parentNode
+            }
+
+            for (node in rootNode.childNodes) {
+                for (opponentNode in node.childNodes) {
+                    for (myNode in opponentNode.childNodes) {
+                        val
+                    }
+                }
+            }
+
+
+            var maxAlpha = 0.0
             var parentNode = queue.peek().parentNode
+
             while (queue.peek() != null) {
                 val node = queue.poll()
-                if (node.parentNode != parentNode) {
-                    parentNode = node.parentNode
+                if (node.boardValue > maxAlpha) {
+                    maxAlpha = node.boardValue
                 }
 
+                if (queue.peek() != null && queue.peek().parentNode != parentNode) {
+
+                    // Ok we've reached end of a nodes children,
+
+                    parentNode = queue.peek().parentNode
+                    maxAlpha = 0.0
+                }
             }
         }
         return ChessBoard()
@@ -75,3 +105,5 @@ class ChessEngine {
         return true
     }
 }
+
+class NoMoveFoundException : Exception()
