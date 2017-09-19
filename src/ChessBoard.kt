@@ -14,9 +14,63 @@ class MyApp {
 class ChessBoard(private val squares: Array<ChessSquare>
                  = Array(64, { index -> ChessSquare(coordFromIndex(index), startingPieceFromIndex(index))})) {
 
-    fun makeMove(from: Pair<Int, Int>, to: Pair<Int, Int>) : ChessBoard {
-        // TODO Moves a piece from -> to and returns new board state
-        return ChessBoard()
+    // Makes all possible valid moves for the given color
+    // returns a set of all new board states produced by those moves
+    fun makeAllValidMoves(forColor: ChessPieceColor) : List<ChessBoard> {
+        val newBoards = ArrayList<ChessBoard>()
+        for (square in squares) {
+            val piece = square.piece
+            if (piece != null) {
+                if (piece.color == forColor) {
+                    if (piece.name == ChessPieceName.Pawn) {
+                        val forwardCoord: Pair<Int, Int>
+                        val forwardLeftCoord: Pair<Int, Int>
+                        val forwardRightCoord: Pair<Int, Int>
+                        if (forColor == ChessPieceColor.White) {
+                            forwardCoord = Pair(square.coord.first, square.coord.second + 1)
+                            forwardLeftCoord = Pair(square.coord.first - 1, square.coord.second + 1)
+                            forwardRightCoord = Pair(square.coord.first + 1, square.coord.second + 1)
+                        } else {
+                            forwardCoord = Pair(square.coord.first, square.coord.second - 1)
+                            forwardLeftCoord = Pair(square.coord.first - 1, square.coord.second - 1)
+                            forwardRightCoord = Pair(square.coord.first + 1, square.coord.second - 1)
+                        }
+                        if (forwardCoord.second < 8 && forwardCoord.second > 0) {
+                            newBoards.add(makeMove(square.coord, forwardCoord))
+                        }
+                        if (forwardLeftCoord.first > 0 && forwardLeftCoord.first > 0 &&
+                                forwardLeftCoord.second > 0 && forwardLeftCoord.second < 8) {
+                            newBoards.add(makeMove(square.coord, forwardLeftCoord))
+                        }
+                        if (forwardRightCoord.first > 0 && forwardRightCoord.first > 0 &&
+                                forwardRightCoord.second > 0 && forwardRightCoord.second < 8) {
+                            newBoards.add(makeMove(square.coord, forwardRightCoord))
+                        }
+                    }
+                }
+            }
+        }
+        return newBoards
+    }
+
+    // Moves the piece on square from -> to
+    private fun makeMove(from: Pair<Int, Int>, to: Pair<Int, Int>) : ChessBoard {
+        // Copy squares
+        val newSquares = squares
+
+        // Get ref to from square and to square
+        val fromSquare = newSquares[indexFromCoord(from)]
+        val toSquare = newSquares[indexFromCoord(to)]
+
+        // Get ref to piece
+        val piece = fromSquare.piece
+
+        // Move piece from -> to
+        toSquare.piece = piece
+        fromSquare.piece = null
+
+        // Return new chessboard
+        return ChessBoard(newSquares)
     }
 
     // Evaluates the passed board state for the specified player

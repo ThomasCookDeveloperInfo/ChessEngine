@@ -1,5 +1,8 @@
 package com.Main
 
+import java.util.Queue
+import java.util.LinkedList
+
 // The core of the chess AI
 class ChessEngine {
 
@@ -11,8 +14,12 @@ class ChessEngine {
 
         // While game has not finished
         while (true) {
+            // Setup queue
+        val queue = LinkedList<NegamaxNode>()
+            queue.add(NegamaxNode(null, chessBoard))
+
             // Get the next board state
-            val chessBoard = negamax(chessBoard, currentPlayer, 3)
+            chessBoard = negamax(queue, currentPlayer)
 
             // Is the game over?
             if (gameOver(chessBoard, currentPlayer)) {
@@ -23,18 +30,42 @@ class ChessEngine {
         }
     }
 
-    // Recursive function to find best move given the board state and the current player, returns the new board
-    private fun negamax(forBoard: ChessBoard, forColor: ChessPieceColor, depth: Int) : ChessBoard {
-        // TODO Finds the best root node for a given board state and a given player by applying negamax to D = depth
+    private data class NegamaxNode(val parentNode: NegamaxNode?,
+                                   val board: ChessBoard,
+                                   val childNodes: List<NegamaxNode> = ArrayList<NegamaxNode>())
 
-        val initialBoardValue = forBoard.evaluate(forColor)
-        System.out.println("Initial Board Value: " + initialBoardValue)
-        // While d <= depth
-        // For each piece owned by current player
-        // For each valid move for the piece
-        // Create a copy of the board with that move madeS
-        // Evaluate the board
+    private fun negamax(queue: Queue<NegamaxNode>, forColor: ChessPieceColor, depth: Int = 0) : ChessBoard {
+        if (depth < 3) {
+            // Get the next layer
+            val nextLayerQueue = LinkedList<NegamaxNode>()
+            while (queue.peek() != null) {
+                val node = queue.poll()
+                for (board in node.board.makeAllValidMoves(forColor)) {
+                    val newNode = NegamaxNode(node, board)
+                    nextLayerQueue.add(newNode)
+                }
+            }
 
+            // Increase depth
+            val newDepth = depth + 1
+
+            // Get next player
+            val nextPlayer =
+                    if (forColor == ChessPieceColor.White) ChessPieceColor.Black
+                    else ChessPieceColor.White
+
+            // Process the next layer
+            negamax(nextLayerQueue, nextPlayer, newDepth)
+        } else {
+            var parentNode = queue.peek().parentNode
+            while (queue.peek() != null) {
+                val node = queue.poll()
+                if (node.parentNode != parentNode) {
+                    parentNode = node.parentNode
+                }
+
+            }
+        }
         return ChessBoard()
     }
 
